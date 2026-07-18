@@ -317,14 +317,14 @@ export default function PromptExplorer() {
 
       {/* ───── メイン ───── */}
       <div className="min-w-0 flex-1">
-        {/* まず使う3本（未絞り込み時のみ） */}
+        {/* まず使うN本（未絞り込み時のみ） */}
         {showQuickStart && (
           <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50/60 p-4 dark:border-brand-800 dark:bg-brand-950/30">
             <div className="mb-3 flex items-center gap-2">
-              <span className="text-sm font-bold text-brand-700">🚀 まず使う3本</span>
+              <span className="text-sm font-bold text-brand-700">🚀 まず使う{quickStart.length}本</span>
               <span className="text-xs text-muted">迷ったらここから</span>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {quickStart.map((p) => (
                 <PromptCard key={`qs-${p.id}`} prompt={p} fav={favs.has(p.id)} onToggleFav={toggleFav} />
               ))}

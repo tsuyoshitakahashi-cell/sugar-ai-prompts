@@ -77,8 +77,6 @@ export const priorityRank: Record<string, 1 | 2> = {
   "visual-reform-after": 1,
   "visual-tochi-hamekomi": 1,
   "visual-staging-request": 1,
-  "sales-maisoku-info": 1,
-  "sales-maisoku-gpt": 1,
   "eigyo-gijiroku-tsugi": 1,
   "shiire-satei-mojiokoshi": 1,
   "basic-kata": 1,
@@ -87,7 +85,6 @@ export const priorityRank: Record<string, 1 | 2> = {
   "visual-gaiheki-shitsukan": 2,
   "visual-concept-board": 2,
   "visual-staging-fixed": 2,
-  "sales-maisoku-html": 2,
   "sales-tochi-onesheet": 2,
   "sales-tateuri-hansoku": 2,
   "eigyo-teian-slide": 2,
@@ -103,10 +100,11 @@ export const priorityRank: Record<string, 1 | 2> = {
 /** ソート用ランク（未設定は 9=通常） */
 export const promptRank = (id: string): number => priorityRank[id] ?? 9;
 
-/** 「まず使う3本」— 新規メンバーの入口（パース／マイソク／AI基礎の3本柱） */
+/** 「まず使う4本」— 新規メンバーの入口（ビフォーアフター／内観パース／バーチャルステージング／AI基礎） */
 export const quickStartIds: string[] = [
   "visual-reform-after",
-  "sales-maisoku-info",
+  "visual-naikan-perse",
+  "visual-staging-request",
   "basic-kata",
 ];
 
