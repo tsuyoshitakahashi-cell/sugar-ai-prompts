@@ -11,10 +11,10 @@ import Image from "next/image";
  * 写真が0枚のあいだは、海を思わせるティール→ネイビーの微動グラデーションが自動で表示される。
  */
 const HERO_IMAGES: { src: string; alt: string }[] = [
-  // { src: "/hero/1.webp", alt: "藤沢のリノベーション施工事例 LDK" },
-  // { src: "/hero/2.webp", alt: "海の見える住まい" },
-  // { src: "/hero/3.webp", alt: "ナチュラルな内装のキッチン" },
-  // { src: "/hero/4.webp", alt: "湘南の海とサーフィン" },
+  { src: "/hero/1.webp", alt: "Sugarの施工事例：インダストリアル×木の温もりのLDK" },
+  { src: "/hero/2.webp", alt: "Sugarの施工事例：レザーソファでくつろぐリビング" },
+  { src: "/hero/3.webp", alt: "Sugarの施工事例：サーフボードを飾った湘南らしいリビング" },
+  { src: "/hero/4.webp", alt: "Sugarの施工事例：勾配天井と梁が印象的な開放的なLDK" },
 ];
 
 export default function HeroBackground() {
