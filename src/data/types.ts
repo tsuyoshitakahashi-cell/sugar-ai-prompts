@@ -26,7 +26,16 @@ export type PainId =
   | "hinshitsu"
   | "shirabe"
   | "visual"
-  | "shiryo";
+  | "shiryo"
+  | "shikumi";
+
+/** 職種（役割）。category から自動導出するが、roleTags で個別上書き可 */
+export type RoleId =
+  | "keiei"
+  | "fudosan"
+  | "eigyo"
+  | "sekkei"
+  | "genba";
 
 export type Tool = "chatgpt" | "claude" | "both";
 
@@ -42,6 +51,8 @@ export type Prompt = {
   category: CategoryId;
   personTags: PersonId[];
   painTags: PainId[];
+  /** 職種（省略時は category から自動導出） */
+  roleTags?: RoleId[];
   tool: Tool;
   /** プロンプト本文（{ } は自社・物件情報の差し替え箇所） */
   body: string;

@@ -2,14 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { prompts } from "@/data/prompts";
-import { categories, persons, pains } from "@/data/taxonomy";
-import type { CategoryId, PersonId, PainId, Prompt } from "@/data/types";
+import { categories, persons, pains, roles, promptRoles } from "@/data/taxonomy";
+import type { CategoryId, PersonId, PainId, RoleId, Prompt } from "@/data/types";
 import PromptCard from "./PromptCard";
 
 const FAV_KEY = "sugar-fav-v1";
 
 type Filters = {
   category: CategoryId | null;
+  roles: RoleId[];
   persons: PersonId[];
   pains: PainId[];
   q: string;
@@ -19,6 +20,7 @@ type Filters = {
 function matches(p: Prompt, f: Filters, favs: Set<string>) {
   if (f.favOnly && !favs.has(p.id)) return false;
   if (f.category && p.category !== f.category) return false;
+  if (f.roles.length && !f.roles.some((x) => promptRoles(p).includes(x))) return false;
   if (f.persons.length && !f.persons.some((x) => p.personTags.includes(x))) return false;
   if (f.pains.length && !f.pains.every((x) => p.painTags.includes(x))) return false;
   if (f.q) {
@@ -30,6 +32,7 @@ function matches(p: Prompt, f: Filters, favs: Set<string>) {
 
 export default function PromptExplorer() {
   const [category, setCategory] = useState<CategoryId | null>(null);
+  const [selRoles, setSelRoles] = useState<RoleId[]>([]);
   const [selPersons, setSelPersons] = useState<PersonId[]>([]);
   const [selPains, setSelPains] = useState<PainId[]>([]);
   const [q, setQ] = useState("");
@@ -55,17 +58,19 @@ export default function PromptExplorer() {
     });
   };
 
-  const filters: Filters = { category, persons: selPersons, pains: selPains, q, favOnly };
+  const filters: Filters = { category, roles: selRoles, persons: selPersons, pains: selPains, q, favOnly };
 
   const results = useMemo(
     () => prompts.filter((p) => matches(p, filters, favs)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [category, selPersons, selPains, q, favOnly, favs],
+    [category, selRoles, selPersons, selPains, q, favOnly, favs],
   );
 
   // ファセット件数
   const catCount = (c: CategoryId) =>
     prompts.filter((p) => p.category === c && matches(p, { ...filters, category: null }, favs)).length;
+  const roleCount = (id: RoleId) =>
+    prompts.filter((p) => promptRoles(p).includes(id) && matches(p, { ...filters, roles: [] }, favs)).length;
   const personCount = (id: PersonId) =>
     prompts.filter((p) => p.personTags.includes(id) && matches(p, { ...filters, persons: [] }, favs)).length;
   const painCount = (id: PainId) =>
@@ -77,12 +82,14 @@ export default function PromptExplorer() {
     list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
   const clearAll = () => {
     setCategory(null);
+    setSelRoles([]);
     setSelPersons([]);
     setSelPains([]);
     setQ("");
     setFavOnly(false);
   };
-  const active = !!category || selPersons.length || selPains.length || q.trim() || favOnly;
+  const active =
+    !!category || selRoles.length || selPersons.length || selPains.length || q.trim() || favOnly;
 
   return (
     <section id="prompts" className="mx-auto w-full max-w-7xl gap-6 px-4 py-8 lg:flex">
@@ -142,6 +149,37 @@ export default function PromptExplorer() {
                 );
               })}
             </ul>
+          </div>
+
+          {/* 職種 */}
+          <div className="mb-4">
+            <div className="mb-1.5 text-xs font-bold text-muted">
+              職種で絞り込む <span className="font-normal">複数＝いずれか</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {roles.map((r) => {
+                const on = selRoles.includes(r.id);
+                const n = roleCount(r.id);
+                const disabled = !on && n === 0;
+                return (
+                  <button
+                    key={r.id}
+                    disabled={disabled}
+                    onClick={() => setSelRoles((l) => toggle(l, r.id))}
+                    title={r.desc}
+                    className={`rounded-full border px-2.5 py-1 text-xs transition ${
+                      on
+                        ? "border-brand-500 bg-brand-500 text-white"
+                        : disabled
+                          ? "cursor-not-allowed border-border/60 text-border"
+                          : "border-border bg-surface text-foreground hover:border-brand-400"
+                    }`}
+                  >
+                    {r.icon} {r.label} <span className={on ? "text-white/80" : "text-muted"}>{n}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* お悩みタグ */}

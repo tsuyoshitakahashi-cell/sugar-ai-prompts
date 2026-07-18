@@ -1,24 +1,47 @@
-import type { CategoryId, PersonId, PainId } from "./types";
+import type { CategoryId, PersonId, PainId, RoleId, Prompt } from "./types";
 
 export const categories: { id: CategoryId; label: string; icon: string; desc: string }[] = [
-  { id: "shiire", label: "仕入れ・査定", icon: "🔑", desc: "買取価格試算・査定コメント・仲介への打診" },
+  { id: "shiire", label: "仕入れ・査定", icon: "🔑", desc: "買取価格試算・査定コメント・仲介への打診・物件調査" },
   { id: "research", label: "リサーチ・エリア分析", icon: "🔎", desc: "相場・ハザード・周辺環境・ペルソナ・コンセプト" },
-  { id: "design", label: "設計・プランニング", icon: "📐", desc: "間取り改善・コンセプト・仕上げ方針・素材選定" },
-  { id: "spec", label: "見積・仕様書", icon: "📋", desc: "品番調べ・仕上げ表・見積チェック・仕様説明" },
-  { id: "visual", label: "パース・画像生成", icon: "🎨", desc: "バーチャルステージング・リフォーム後イメージ・内観外観パース" },
-  { id: "sales", label: "販売・集客", icon: "📣", desc: "マイソク・物件紹介文・ポータル/SNS・キャッチコピー" },
-  { id: "eigyo", label: "営業・接客", icon: "🤝", desc: "反響対応・追客・ヒアリング・提案書・ローン説明" },
-  { id: "genba", label: "現場管理", icon: "🔨", desc: "工程表・職人手配・進捗報告・注意喚起・近隣挨拶" },
-  { id: "backoffice", label: "バックオフィス・経営", icon: "🗂️", desc: "請求書集計・原価管理・議事録・マニュアル化・メール" },
-  { id: "basic", label: "AI活用の基本", icon: "🧭", desc: "プロンプトの型・画像修正の指示・壁打ち・要約" },
+  { id: "design", label: "設計・プランニング", icon: "📐", desc: "間取り改善・新築プラン・コンセプト・仕上げ・素材選定" },
+  { id: "spec", label: "見積・仕様書", icon: "📋", desc: "品番調べ・仕上げ表・拾い出し・見積チェック・仕様説明" },
+  { id: "visual", label: "パース・画像生成", icon: "🎨", desc: "外観/内観パース・新築/リノベ・ステージング・更地合成" },
+  { id: "sales", label: "販売・集客", icon: "📣", desc: "マイソク・物件紹介文・ポータル/SNS・建売販促" },
+  { id: "eigyo", label: "営業・接客", icon: "🤝", desc: "反響対応・追客・ヒアリング・提案書・ローン説明・アフター" },
+  { id: "genba", label: "現場管理", icon: "🔨", desc: "工程表・職人手配・進捗報告・引渡し・定期点検" },
+  { id: "backoffice", label: "バックオフィス・経営", icon: "🗂️", desc: "請求書集計・原価/資金繰り・議事録・マニュアル化" },
+  { id: "basic", label: "AI活用の基本", icon: "🧭", desc: "プロンプトの型・画像修正の指示・壁打ち・要約・仕組み化" },
 ];
 
+/** 職種（役割）— 職種別業務理解マップに対応。担当者名に依存しない役割軸 */
+export const roles: { id: RoleId; label: string; icon: string; desc: string }[] = [
+  { id: "keiei", label: "経営・バックオフィス", icon: "🏢", desc: "仕入れ判断・値付け・資金繰り・原価・請求書・議事録" },
+  { id: "fudosan", label: "不動産・仕入れ", icon: "🏠", desc: "物件調査・査定・買取再販・相場リサーチ" },
+  { id: "eigyo", label: "営業・販売", icon: "🤝", desc: "反響・接客・提案・追客・マイソク・集客・アフター" },
+  { id: "sekkei", label: "設計・積算", icon: "✏️", desc: "間取り・仕上げ・パース・拾い出し・見積・仕様書" },
+  { id: "genba", label: "現場・施工管理", icon: "🔨", desc: "工程・職人手配・進捗・引渡し・点検" },
+];
+
+/** category → 職種 の既定マッピング（roleTags 未指定のプロンプトに適用） */
+export const categoryRoles: Record<CategoryId, RoleId[]> = {
+  shiire: ["fudosan", "keiei"],
+  research: ["fudosan", "eigyo"],
+  design: ["sekkei"],
+  spec: ["sekkei"],
+  visual: ["sekkei", "eigyo"],
+  sales: ["eigyo"],
+  eigyo: ["eigyo"],
+  genba: ["genba"],
+  backoffice: ["keiei"],
+  basic: ["keiei", "fudosan", "eigyo", "sekkei", "genba"],
+};
+
 export const persons: { id: PersonId; label: string; role: string }[] = [
-  { id: "abe", label: "阿部さん", role: "社長・新築建売" },
-  { id: "takanashi", label: "高梨さん", role: "現場管理" },
-  { id: "hayami", label: "早見さん", role: "現場管理" },
-  { id: "ono", label: "小野さん", role: "買取再販・リノベ" },
-  { id: "kojima", label: "小嶋さん", role: "設計・工事管理" },
+  { id: "abe", label: "阿部さん", role: "社長／新築注文・建売・仕入れ" },
+  { id: "takanashi", label: "高梨さん", role: "現場管理・設計提案" },
+  { id: "hayami", label: "早見さん", role: "現場管理・積算" },
+  { id: "ono", label: "小野さん", role: "買取再販・リノベ営業" },
+  { id: "kojima", label: "小嶋さん", role: "設計・デザイン" },
   { id: "yamaguchi", label: "山口さん", role: "リノベ営業" },
   { id: "all", label: "全員", role: "共通" },
 ];
@@ -31,8 +54,13 @@ export const pains: { id: PainId; label: string }[] = [
   { id: "shirabe", label: "調べ物が多い" },
   { id: "visual", label: "画像・ビジュアル" },
   { id: "shiryo", label: "顧客に見せる資料" },
+  { id: "shikumi", label: "仕組み化・自動化" },
 ];
+
+/** プロンプトの職種（roleTags 優先、なければ category から導出） */
+export const promptRoles = (p: Prompt): RoleId[] => p.roleTags ?? categoryRoles[p.category];
 
 export const categoryLabel = (id: CategoryId) => categories.find((c) => c.id === id)!;
 export const personLabel = (id: PersonId) => persons.find((p) => p.id === id)!;
 export const painLabel = (id: PainId) => pains.find((p) => p.id === id)!;
+export const roleLabel = (id: RoleId) => roles.find((r) => r.id === id)!;
