@@ -64,3 +64,54 @@ export const categoryLabel = (id: CategoryId) => categories.find((c) => c.id ===
 export const personLabel = (id: PersonId) => persons.find((p) => p.id === id)!;
 export const painLabel = (id: PainId) => pains.find((p) => p.id === id)!;
 export const roleLabel = (id: RoleId) => roles.find((r) => r.id === id)!;
+
+/**
+ * 活用頻度・要望の高さ（=おすすめ度）。1=🔥人気（最上位表示）/ 2=★よく使う。
+ * 初期値は阿部さんNotion＋キックオフ要望（ChatGPTパース・マイソク・議事録）を根拠に設定。
+ * 将来はアクセス実測や社内アンケートで補正する。ここを編集するだけで並び順が変わる。
+ */
+export const priorityRank: Record<string, 1 | 2> = {
+  // 🔥 人気（トップ表示）
+  "visual-shinchiku-gaikan": 1,
+  "visual-shinchiku-naikan": 1,
+  "visual-reform-after": 1,
+  "visual-tochi-hamekomi": 1,
+  "visual-staging-request": 1,
+  "sales-maisoku-info": 1,
+  "sales-maisoku-gpt": 1,
+  "eigyo-gijiroku-tsugi": 1,
+  "shiire-satei-mojiokoshi": 1,
+  "basic-kata": 1,
+  // ★ よく使う
+  "visual-naikan-perse": 2,
+  "visual-gaiheki-shitsukan": 2,
+  "visual-concept-board": 2,
+  "visual-staging-fixed": 2,
+  "sales-maisoku-html": 2,
+  "sales-tochi-onesheet": 2,
+  "sales-tateuri-hansoku": 2,
+  "eigyo-teian-slide": 2,
+  "eigyo-hearing-sheet": 2,
+  "eigyo-shinchiku-teian": 2,
+  "research-souba-yomikata": 2,
+  "spec-heibei-hiroi": 2,
+  "back-seikyu-pdf": 2,
+  "basic-kabeuchi": 2,
+  "basic-tool-select": 2,
+};
+
+/** ソート用ランク（未設定は 9=通常） */
+export const promptRank = (id: string): number => priorityRank[id] ?? 9;
+
+/** 「まず使う3本」— 新規メンバーの入口（パース／マイソク／AI基礎の3本柱） */
+export const quickStartIds: string[] = [
+  "visual-reform-after",
+  "sales-maisoku-info",
+  "basic-kata",
+];
+
+/** ツールフィルタの選択肢 */
+export const toolFilters: { id: "chatgpt" | "claude"; label: string; icon: string }[] = [
+  { id: "chatgpt", label: "ChatGPT", icon: "🖼️" },
+  { id: "claude", label: "Claude", icon: "📝" },
+];

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Prompt } from "@/data/types";
-import { categoryLabel, personLabel, painLabel } from "@/data/taxonomy";
+import { categoryLabel, personLabel, painLabel, promptRank } from "@/data/taxonomy";
 
 function copyText(text: string) {
   if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
@@ -56,6 +56,7 @@ export default function PromptCard({
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const cat = categoryLabel(prompt.category);
+  const rank = promptRank(prompt.id);
 
   const flash = (key: string) => {
     setCopied(key);
@@ -86,6 +87,16 @@ export default function PromptCard({
             <span className="rounded-md border border-border px-2 py-0.5 text-[11px] font-medium text-muted">
               {toolBadge[prompt.tool]}
             </span>
+            {rank === 1 && (
+              <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/50 dark:text-amber-400">
+                🔥 人気
+              </span>
+            )}
+            {rank === 2 && (
+              <span className="rounded-md border border-amber-300 px-2 py-0.5 text-[11px] font-semibold text-amber-600">
+                ★ よく使う
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1.5">
             <button

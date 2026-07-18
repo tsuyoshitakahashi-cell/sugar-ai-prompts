@@ -2,17 +2,28 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { prompts } from "@/data/prompts";
-import { categories, persons, pains, roles, promptRoles } from "@/data/taxonomy";
+import {
+  categories,
+  persons,
+  pains,
+  roles,
+  promptRoles,
+  promptRank,
+  quickStartIds,
+  toolFilters,
+} from "@/data/taxonomy";
 import type { CategoryId, PersonId, PainId, RoleId, Prompt } from "@/data/types";
 import PromptCard from "./PromptCard";
 
 const FAV_KEY = "sugar-fav-v1";
+type ToolFilter = "chatgpt" | "claude";
 
 type Filters = {
   category: CategoryId | null;
   roles: RoleId[];
   persons: PersonId[];
   pains: PainId[];
+  tool: ToolFilter | null;
   q: string;
   favOnly: boolean;
 };
@@ -23,6 +34,7 @@ function matches(p: Prompt, f: Filters, favs: Set<string>) {
   if (f.roles.length && !f.roles.some((x) => promptRoles(p).includes(x))) return false;
   if (f.persons.length && !f.persons.some((x) => p.personTags.includes(x))) return false;
   if (f.pains.length && !f.pains.every((x) => p.painTags.includes(x))) return false;
+  if (f.tool && p.tool !== f.tool && p.tool !== "both") return false;
   if (f.q) {
     const hay = (p.title + p.when + p.prepare + p.output + p.body).toLowerCase();
     if (!hay.includes(f.q.toLowerCase())) return false;
@@ -35,6 +47,7 @@ export default function PromptExplorer() {
   const [selRoles, setSelRoles] = useState<RoleId[]>([]);
   const [selPersons, setSelPersons] = useState<PersonId[]>([]);
   const [selPains, setSelPains] = useState<PainId[]>([]);
+  const [selTool, setSelTool] = useState<ToolFilter | null>(null);
   const [q, setQ] = useState("");
   const [favOnly, setFavOnly] = useState(false);
   const [favs, setFavs] = useState<Set<string>>(new Set());
@@ -58,12 +71,24 @@ export default function PromptExplorer() {
     });
   };
 
-  const filters: Filters = { category, roles: selRoles, persons: selPersons, pains: selPains, q, favOnly };
+  const filters: Filters = {
+    category,
+    roles: selRoles,
+    persons: selPersons,
+    pains: selPains,
+    tool: selTool,
+    q,
+    favOnly,
+  };
 
+  // おすすめ順（🔥/★を上位）→ 同ランクは配列順を維持（安定ソート）
   const results = useMemo(
-    () => prompts.filter((p) => matches(p, filters, favs)),
+    () =>
+      prompts
+        .filter((p) => matches(p, filters, favs))
+        .sort((a, b) => promptRank(a.id) - promptRank(b.id)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [category, selRoles, selPersons, selPains, q, favOnly, favs],
+    [category, selRoles, selPersons, selPains, selTool, q, favOnly, favs],
   );
 
   // ファセット件数
@@ -77,6 +102,8 @@ export default function PromptExplorer() {
     prompts.filter((p) =>
       matches(p, { ...filters, pains: Array.from(new Set([...selPains, id])) }, favs),
     ).length;
+  const toolCount = (id: ToolFilter) =>
+    prompts.filter((p) => matches(p, { ...filters, tool: id }, favs)).length;
 
   const toggle = <T,>(list: T[], v: T): T[] =>
     list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
@@ -85,11 +112,25 @@ export default function PromptExplorer() {
     setSelRoles([]);
     setSelPersons([]);
     setSelPains([]);
+    setSelTool(null);
     setQ("");
     setFavOnly(false);
   };
-  const active =
-    !!category || selRoles.length || selPersons.length || selPains.length || q.trim() || favOnly;
+  const active = !!(
+    category ||
+    selRoles.length ||
+    selPersons.length ||
+    selPains.length ||
+    selTool ||
+    q.trim() ||
+    favOnly
+  );
+
+  // 「まず使う3本」— 何も絞り込んでいないときだけトップに表示
+  const quickStart = quickStartIds
+    .map((id) => prompts.find((p) => p.id === id))
+    .filter((p): p is Prompt => !!p);
+  const showQuickStart = !active;
 
   return (
     <section id="prompts" className="mx-auto w-full max-w-7xl gap-6 px-4 py-8 lg:flex">
@@ -115,6 +156,30 @@ export default function PromptExplorer() {
             <span>★ お気に入り</span>
             <span className="rounded-full bg-chip px-2 text-xs text-muted">{favs.size}</span>
           </button>
+
+          {/* ツール */}
+          <div className="mb-4">
+            <div className="mb-1.5 text-xs font-bold text-muted">使うAIで絞り込む</div>
+            <div className="flex gap-1.5">
+              {toolFilters.map((t) => {
+                const on = selTool === t.id;
+                const n = toolCount(t.id);
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setSelTool(on ? null : t.id)}
+                    className={`flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition ${
+                      on
+                        ? "border-brand-500 bg-brand-500 text-white"
+                        : "border-border bg-surface text-foreground hover:border-brand-400"
+                    }`}
+                  >
+                    {t.icon} {t.label} <span className={on ? "text-white/80" : "text-muted"}>{n}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* カテゴリ */}
           <div className="mb-4">
@@ -250,9 +315,25 @@ export default function PromptExplorer() {
 
       {/* ───── メイン ───── */}
       <div className="min-w-0 flex-1">
+        {/* まず使う3本（未絞り込み時のみ） */}
+        {showQuickStart && (
+          <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50/60 p-4 dark:border-brand-800 dark:bg-brand-950/30">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-sm font-bold text-brand-700">🚀 まず使う3本</span>
+              <span className="text-xs text-muted">迷ったらここから</span>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {quickStart.map((p) => (
+                <PromptCard key={`qs-${p.id}`} prompt={p} fav={favs.has(p.id)} onToggleFav={toggleFav} />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mb-4 flex items-baseline gap-2">
           <span className="text-xl font-bold text-foreground">{results.length}</span>
           <span className="text-sm text-muted">件のプロンプト</span>
+          {!active && <span className="text-xs text-muted">・おすすめ順</span>}
         </div>
 
         {results.length === 0 ? (
