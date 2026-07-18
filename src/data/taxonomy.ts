@@ -100,12 +100,11 @@ export const priorityRank: Record<string, 1 | 2> = {
 /** ソート用ランク（未設定は 9=通常） */
 export const promptRank = (id: string): number => priorityRank[id] ?? 9;
 
-/** 「まず使う4本」— 新規メンバーの入口（ビフォーアフター／内観パース／バーチャルステージング／AI基礎） */
+/** 「まず使う3本」— 新規メンバーの入口（ビフォーアフター／内観パース／バーチャルステージング） */
 export const quickStartIds: string[] = [
   "visual-reform-after",
   "visual-naikan-perse",
   "visual-staging-request",
-  "basic-kata",
 ];
 
 /** ツールフィルタの選択肢（ChatGPT専用 / Claude専用 / 両対応 の3区分） */

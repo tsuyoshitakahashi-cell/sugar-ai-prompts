@@ -324,7 +324,7 @@ export default function PromptExplorer() {
               <span className="text-sm font-bold text-brand-700">🚀 まず使う{quickStart.length}本</span>
               <span className="text-xs text-muted">迷ったらここから</span>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {quickStart.map((p) => (
                 <PromptCard key={`qs-${p.id}`} prompt={p} fav={favs.has(p.id)} onToggleFav={toggleFav} />
               ))}
