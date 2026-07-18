@@ -1,148 +1,239 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { prompts } from "@/data/prompts";
 import { categories, persons, pains } from "@/data/taxonomy";
-import type { CategoryId, PersonId, PainId } from "@/data/types";
+import type { CategoryId, PersonId, PainId, Prompt } from "@/data/types";
 import PromptCard from "./PromptCard";
+
+const FAV_KEY = "sugar-fav-v1";
+
+type Filters = {
+  category: CategoryId | null;
+  persons: PersonId[];
+  pains: PainId[];
+  q: string;
+  favOnly: boolean;
+};
+
+function matches(p: Prompt, f: Filters, favs: Set<string>) {
+  if (f.favOnly && !favs.has(p.id)) return false;
+  if (f.category && p.category !== f.category) return false;
+  if (f.persons.length && !f.persons.some((x) => p.personTags.includes(x))) return false;
+  if (f.pains.length && !f.pains.every((x) => p.painTags.includes(x))) return false;
+  if (f.q) {
+    const hay = (p.title + p.when + p.prepare + p.output + p.body).toLowerCase();
+    if (!hay.includes(f.q.toLowerCase())) return false;
+  }
+  return true;
+}
 
 export default function PromptExplorer() {
   const [category, setCategory] = useState<CategoryId | null>(null);
   const [selPersons, setSelPersons] = useState<PersonId[]>([]);
   const [selPains, setSelPains] = useState<PainId[]>([]);
   const [q, setQ] = useState("");
+  const [favOnly, setFavOnly] = useState(false);
+  const [favs, setFavs] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(FAV_KEY);
+      if (raw) setFavs(new Set(JSON.parse(raw)));
+    } catch {}
+  }, []);
+
+  const toggleFav = (id: string) => {
+    setFavs((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      try {
+        localStorage.setItem(FAV_KEY, JSON.stringify([...next]));
+      } catch {}
+      return next;
+    });
+  };
+
+  const filters: Filters = { category, persons: selPersons, pains: selPains, q, favOnly };
+
+  const results = useMemo(
+    () => prompts.filter((p) => matches(p, filters, favs)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [category, selPersons, selPains, q, favOnly, favs],
+  );
+
+  // ファセット件数
+  const catCount = (c: CategoryId) =>
+    prompts.filter((p) => p.category === c && matches(p, { ...filters, category: null }, favs)).length;
+  const personCount = (id: PersonId) =>
+    prompts.filter((p) => p.personTags.includes(id) && matches(p, { ...filters, persons: [] }, favs)).length;
+  const painCount = (id: PainId) =>
+    prompts.filter((p) =>
+      matches(p, { ...filters, pains: Array.from(new Set([...selPains, id])) }, favs),
+    ).length;
 
   const toggle = <T,>(list: T[], v: T): T[] =>
     list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
-
   const clearAll = () => {
     setCategory(null);
     setSelPersons([]);
     setSelPains([]);
     setQ("");
+    setFavOnly(false);
   };
-
-  const results = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    return prompts.filter((p) => {
-      if (category && p.category !== category) return false;
-      if (selPersons.length && !selPersons.some((x) => p.personTags.includes(x)))
-        return false;
-      // お悩みタグは「すべて含む」(AND)
-      if (selPains.length && !selPains.every((x) => p.painTags.includes(x)))
-        return false;
-      if (query) {
-        const hay = (p.title + p.summary + p.body).toLowerCase();
-        if (!hay.includes(query)) return false;
-      }
-      return true;
-    });
-  }, [category, selPersons, selPains, q]);
-
-  const active =
-    !!category || selPersons.length > 0 || selPains.length > 0 || q.trim() !== "";
-
-  const chip = (on: boolean) =>
-    `rounded-full border px-3 py-1.5 text-sm transition ${
-      on
-        ? "border-brand-500 bg-brand-500 text-white"
-        : "border-border bg-surface text-foreground hover:border-brand-400"
-    }`;
+  const active = !!category || selPersons.length || selPains.length || q.trim() || favOnly;
 
   return (
-    <section id="prompts" className="mx-auto w-full max-w-6xl px-4 py-8">
-      {/* 検索 */}
-      <div className="mb-4">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="キーワードで探す（例：マイソク、追客、間取り、請求書…）"
-          className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-base outline-none focus:border-brand-500"
-        />
-      </div>
+    <section id="prompts" className="mx-auto w-full max-w-7xl gap-6 px-4 py-8 lg:flex">
+      {/* ───── サイドバー ───── */}
+      <aside className="mb-6 shrink-0 lg:mb-0 lg:w-64">
+        <div className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-auto lg:pr-1">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="🔍 キーワードで検索…"
+            className="mb-3 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:border-brand-500"
+          />
 
-      {/* 業務カテゴリ */}
-      <div className="mb-3">
-        <div className="mb-1.5 text-xs font-semibold text-muted">業務カテゴリ</div>
-        <div className="flex flex-wrap gap-2">
-          <button className={chip(!category)} onClick={() => setCategory(null)}>
-            すべて
-          </button>
-          {categories.map((c) => (
-            <button
-              key={c.id}
-              className={chip(category === c.id)}
-              onClick={() => setCategory(category === c.id ? null : c.id)}
-              title={c.desc}
-            >
-              {c.icon} {c.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 担当者 */}
-      <div className="mb-3">
-        <div className="mb-1.5 text-xs font-semibold text-muted">担当者</div>
-        <div className="flex flex-wrap gap-2">
-          {persons.map((p) => (
-            <button
-              key={p.id}
-              className={chip(selPersons.includes(p.id))}
-              onClick={() => setSelPersons((l) => toggle(l, p.id))}
-              title={p.role}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* お悩みタグ */}
-      <div className="mb-3">
-        <div className="mb-1.5 text-xs font-semibold text-muted">
-          お悩みタグ（複数選ぶと「すべて含む」で絞り込み）
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {pains.map((p) => (
-            <button
-              key={p.id}
-              className={chip(selPains.includes(p.id))}
-              onClick={() => setSelPains((l) => toggle(l, p.id))}
-            >
-              #{p.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 件数＋クリア */}
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-muted">
-          <span className="font-bold text-foreground">{results.length}</span> 件
-        </p>
-        {active && (
+          {/* お気に入り */}
           <button
-            onClick={clearAll}
-            className="text-sm font-medium text-brand-600 hover:text-brand-700"
+            onClick={() => setFavOnly((v) => !v)}
+            className={`mb-4 flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+              favOnly
+                ? "border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-950/40"
+                : "border-border bg-surface text-foreground hover:border-amber-300"
+            }`}
           >
-            条件をすべてクリア
+            <span>★ お気に入り</span>
+            <span className="rounded-full bg-chip px-2 text-xs text-muted">{favs.size}</span>
           </button>
+
+          {/* カテゴリ */}
+          <div className="mb-4">
+            <div className="mb-1.5 text-xs font-bold text-muted">業務カテゴリで絞り込む</div>
+            <ul className="space-y-0.5">
+              <li>
+                <button
+                  onClick={() => setCategory(null)}
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition ${
+                    !category ? "bg-brand-500 font-semibold text-white" : "text-foreground hover:bg-chip"
+                  }`}
+                >
+                  <span>すべて</span>
+                  <span className={!category ? "text-white/80" : "text-muted"}>{prompts.length}</span>
+                </button>
+              </li>
+              {categories.map((c) => {
+                const n = catCount(c.id);
+                const on = category === c.id;
+                return (
+                  <li key={c.id}>
+                    <button
+                      onClick={() => setCategory(on ? null : c.id)}
+                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition ${
+                        on ? "bg-brand-500 font-semibold text-white" : "text-foreground hover:bg-chip"
+                      }`}
+                    >
+                      <span className="truncate">{c.icon} {c.label}</span>
+                      <span className={on ? "text-white/80" : "text-muted"}>{n}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* お悩みタグ */}
+          <div className="mb-4">
+            <div className="mb-1.5 text-xs font-bold text-muted">
+              お悩みタグ <span className="font-normal">複数＝すべて含む</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {pains.map((p) => {
+                const on = selPains.includes(p.id);
+                const n = painCount(p.id);
+                const disabled = !on && n === 0;
+                return (
+                  <button
+                    key={p.id}
+                    disabled={disabled}
+                    onClick={() => setSelPains((l) => toggle(l, p.id))}
+                    className={`rounded-full border px-2.5 py-1 text-xs transition ${
+                      on
+                        ? "border-brand-500 bg-brand-500 text-white"
+                        : disabled
+                          ? "cursor-not-allowed border-border/60 text-border"
+                          : "border-border bg-surface text-foreground hover:border-brand-400"
+                    }`}
+                  >
+                    #{p.label} <span className={on ? "text-white/80" : "text-muted"}>{n}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 担当者 */}
+          <div className="mb-4">
+            <div className="mb-1.5 text-xs font-bold text-muted">担当者で絞り込む</div>
+            <div className="flex flex-wrap gap-1.5">
+              {persons.map((p) => {
+                const on = selPersons.includes(p.id);
+                const n = personCount(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelPersons((l) => toggle(l, p.id))}
+                    title={p.role}
+                    className={`rounded-full border px-2.5 py-1 text-xs transition ${
+                      on
+                        ? "border-brand-500 bg-brand-500 text-white"
+                        : "border-border bg-surface text-foreground hover:border-brand-400"
+                    }`}
+                  >
+                    {p.label} <span className={on ? "text-white/80" : "text-muted"}>{n}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {active ? (
+            <button
+              onClick={clearAll}
+              className="text-sm font-medium text-brand-600 hover:text-brand-700"
+            >
+              条件をすべてクリア
+            </button>
+          ) : null}
+        </div>
+      </aside>
+
+      {/* ───── メイン ───── */}
+      <div className="min-w-0 flex-1">
+        <div className="mb-4 flex items-baseline gap-2">
+          <span className="text-xl font-bold text-foreground">{results.length}</span>
+          <span className="text-sm text-muted">件のプロンプト</span>
+        </div>
+
+        {results.length === 0 ? (
+          <p className="rounded-xl border border-border bg-surface p-8 text-center text-muted">
+            該当するプロンプトがありません。条件をゆるめてみてください。
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {results.map((p) => (
+              <PromptCard
+                key={p.id}
+                prompt={p}
+                fav={favs.has(p.id)}
+                onToggleFav={toggleFav}
+              />
+            ))}
+          </div>
         )}
       </div>
-
-      {/* 結果 */}
-      {results.length === 0 ? (
-        <p className="rounded-xl border border-border bg-surface p-8 text-center text-muted">
-          該当するプロンプトがありません。条件をゆるめてみてください。
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {results.map((p) => (
-            <PromptCard key={p.id} prompt={p} />
-          ))}
-        </div>
-      )}
     </section>
   );
 }
