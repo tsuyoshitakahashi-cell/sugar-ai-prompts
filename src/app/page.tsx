@@ -77,8 +77,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* フラッグシップ（専用ツール） */}
-      <section className="mx-auto w-full max-w-7xl px-4 pt-8">
+      {/* プロンプト一覧（左サイドバー＋グリッド） */}
+      <PromptExplorer />
+
+      {/* フラッグシップ（専用ツール）— コピペ集の下に配置 */}
+      <section className="mx-auto w-full max-w-7xl px-4 pt-10">
         <div className="mb-3">
           <h2 className="text-lg font-bold">🚀 SUGAR専用ツール（構築済み）</h2>
           <p className="text-sm text-muted">
@@ -100,9 +103,6 @@ export default function Home() {
           ))}
         </div>
       </section>
-
-      {/* プロンプト一覧（左サイドバー＋グリッド） */}
-      <PromptExplorer />
 
       {/* フッター */}
       <footer className="mt-auto border-t border-border bg-surface">

@@ -92,7 +92,7 @@ export const priorityRank: Record<string, 1 | 2> = {
   "sales-tateuri-hansoku": 2,
   "eigyo-teian-slide": 2,
   "eigyo-hearing-sheet": 2,
-  "eigyo-shinchiku-teian": 2,
+  "eigyo-teian-draft": 2,
   "research-souba-yomikata": 2,
   "spec-heibei-hiroi": 2,
   "back-seikyu-pdf": 2,
