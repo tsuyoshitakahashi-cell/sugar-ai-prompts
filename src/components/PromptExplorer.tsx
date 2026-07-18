@@ -16,7 +16,7 @@ import type { CategoryId, PersonId, PainId, RoleId, Prompt } from "@/data/types"
 import PromptCard from "./PromptCard";
 
 const FAV_KEY = "sugar-fav-v1";
-type ToolFilter = "chatgpt" | "claude";
+type ToolFilter = "chatgpt" | "claude" | "both";
 
 type Filters = {
   category: CategoryId | null;
@@ -34,7 +34,7 @@ function matches(p: Prompt, f: Filters, favs: Set<string>) {
   if (f.roles.length && !f.roles.some((x) => promptRoles(p).includes(x))) return false;
   if (f.persons.length && !f.persons.some((x) => p.personTags.includes(x))) return false;
   if (f.pains.length && !f.pains.every((x) => p.painTags.includes(x))) return false;
-  if (f.tool && p.tool !== f.tool && p.tool !== "both") return false;
+  if (f.tool && p.tool !== f.tool) return false;
   if (f.q) {
     const hay = (p.title + p.when + p.prepare + p.output + p.body).toLowerCase();
     if (!hay.includes(f.q.toLowerCase())) return false;
@@ -160,7 +160,7 @@ export default function PromptExplorer() {
           {/* ツール */}
           <div className="mb-4">
             <div className="mb-1.5 text-xs font-bold text-muted">使うAIで絞り込む</div>
-            <div className="flex gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               {toolFilters.map((t) => {
                 const on = selTool === t.id;
                 const n = toolCount(t.id);
@@ -168,13 +168,15 @@ export default function PromptExplorer() {
                   <button
                     key={t.id}
                     onClick={() => setSelTool(on ? null : t.id)}
-                    className={`flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition ${
+                    className={`flex flex-col items-center gap-0.5 rounded-lg border px-1 py-2 text-center transition ${
                       on
                         ? "border-brand-500 bg-brand-500 text-white"
                         : "border-border bg-surface text-foreground hover:border-brand-400"
                     }`}
                   >
-                    {t.icon} {t.label} <span className={on ? "text-white/80" : "text-muted"}>{n}</span>
+                    <span className="text-sm leading-none">{t.icon}</span>
+                    <span className="text-[11px] font-medium leading-tight">{t.label}</span>
+                    <span className={`text-[10px] leading-none ${on ? "text-white/80" : "text-muted"}`}>{n}</span>
                   </button>
                 );
               })}

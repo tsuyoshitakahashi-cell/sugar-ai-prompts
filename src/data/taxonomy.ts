@@ -110,8 +110,9 @@ export const quickStartIds: string[] = [
   "basic-kata",
 ];
 
-/** ツールフィルタの選択肢 */
-export const toolFilters: { id: "chatgpt" | "claude"; label: string; icon: string }[] = [
-  { id: "chatgpt", label: "ChatGPT", icon: "🖼️" },
-  { id: "claude", label: "Claude", icon: "📝" },
+/** ツールフィルタの選択肢（ChatGPT専用 / Claude専用 / 両対応 の3区分） */
+export const toolFilters: { id: "chatgpt" | "claude" | "both"; label: string; icon: string }[] = [
+  { id: "chatgpt", label: "ChatGPT専用", icon: "🖼️" },
+  { id: "claude", label: "Claude専用", icon: "📝" },
+  { id: "both", label: "両対応", icon: "🔁" },
 ];

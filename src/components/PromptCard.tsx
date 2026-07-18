@@ -79,8 +79,8 @@ export default function PromptCard({
       {/* 上部：カテゴリ帯 */}
       <div className="border-t-4 border-brand-500 px-4 pt-3.5" />
       <div className="px-4 pb-4">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5">
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             <span className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white">
               {cat.icon} {cat.label}
             </span>
@@ -98,7 +98,7 @@ export default function PromptCard({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1.5">
             <button
               onClick={() => onToggleFav(prompt.id)}
               aria-label="お気に入り"
@@ -108,7 +108,7 @@ export default function PromptCard({
             </button>
             <button
               onClick={doCopy}
-              className="inline-flex items-center gap-1 rounded-md border border-brand-400 px-2.5 py-1 text-xs font-semibold text-brand-700 transition hover:bg-brand-50"
+              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-brand-400 px-2.5 py-1 text-xs font-semibold text-brand-700 transition hover:bg-brand-50"
             >
               {copied === "copy" ? "✓ コピー済" : "⧉ コピー"}
             </button>
