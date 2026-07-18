@@ -48,6 +48,41 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ───── ヒーロー背景スライドショー（写真クロスフェード＋Ken Burns） ───── */
+/* 4枚想定・1周28秒（1枚7秒表示＋約1.1秒クロスフェード）。写真は各 .hero-slide に
+   animationDelay = index*7s をインラインで付与する（HeroBackground.tsx 側）。*/
+@keyframes heroFade {
+  0%   { opacity: 0; }
+  4%   { opacity: 1; }
+  25%  { opacity: 1; }
+  29%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes heroZoom {
+  from { transform: scale(1.06); }
+  to   { transform: scale(1.18); }
+}
+/* 写真がまだ無いときの海イメージの微動グラデーション（極軽量・CSSのみ） */
+@keyframes heroDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.1); }
+  50%      { transform: translate3d(-2.5%, -2%, 0) scale(1.16); }
+}
+.hero-slide {
+  opacity: 0;
+  animation: heroFade 28s ease-in-out infinite;
+}
+.hero-slide > * {
+  animation: heroZoom 14s ease-in-out infinite alternate;
+}
+.hero-drift {
+  animation: heroDrift 18s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide { animation: none; opacity: 0; }
+  .hero-slide:first-child { opacity: 1; }
+  .hero-slide > *, .hero-drift { animation: none; }
+}
+
 /* {プレースホルダ} のハイライト */
 .ph {
   background: var(--color-brand-100);

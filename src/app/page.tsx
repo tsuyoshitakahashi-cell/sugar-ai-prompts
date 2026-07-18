@@ -1,5 +1,6 @@
 import Image from "next/image";
 import PromptExplorer from "@/components/PromptExplorer";
+import HeroBackground from "@/components/HeroBackground";
 import { prompts } from "@/data/prompts";
 import { categories } from "@/data/taxonomy";
 import { flagships } from "@/data/flagship";
@@ -36,28 +37,47 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ヒーロー（ダーク） */}
-      <section className="bg-slate-900 text-slate-100">
-        <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:py-12">
-          <span className="inline-block rounded-full bg-brand-500/20 px-3 py-1 text-xs font-semibold text-brand-200">
-            SUGAR 社内AIツール
+      {/* ヒーロー（施工写真スライドショー背景） */}
+      <section className="relative isolate overflow-hidden text-slate-100">
+        <HeroBackground />
+        <div className="relative mx-auto w-full max-w-7xl px-4 py-14 sm:py-20 lg:py-24">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-brand-100 backdrop-blur-sm">
+            🌊 藤沢のリノベ会社 SUGAR ／ 社内AIツール
           </span>
-          <h1 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">
-            住宅・不動産・リノベのための
-            <br />
-            <span className="text-brand-400">AIプロンプト{prompts.length}</span>
+
+          <h1 className="mt-5 text-pretty text-4xl font-bold leading-[1.15] tracking-tight sm:text-5xl lg:text-6xl">
+            住まいづくりの現場を、
+            <br className="hidden sm:block" />
+            <span className="text-brand-300">AI</span>で、もっと速く。
           </h1>
-          <p className="mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
-            <span className="font-semibold text-white">ChatGPT・Claudeに貼るだけ。</span>
-            現場で本当に使えるAI指示文を、業務カテゴリとお悩みから探せます。
+
+          <p className="mt-5 max-w-3xl text-base leading-relaxed text-slate-200 sm:text-lg [word-break:auto-phrase]">
+            <span className="font-semibold text-white">
+              査定・マイソク・パース・提案書。現場の&ldquo;あの作業&rdquo;が、コピペ1つで動き出す。
+            </span>
+            <br className="hidden sm:block" />
+            ChatGPT・Claudeに貼るだけの実務プロンプト{prompts.length}本を、業務カテゴリ・お悩みから今すぐ。
           </p>
 
+          <div className="mt-8">
+            <a
+              href="#prompts"
+              className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-6 py-3 text-base font-bold text-white shadow-lg shadow-brand-900/30 transition hover:bg-brand-400"
+            >
+              プロンプトを探す
+              <span aria-hidden>→</span>
+            </a>
+          </div>
+
           {/* スタッツ */}
-          <div className="mt-6 flex flex-wrap gap-2.5">
+          <div className="mt-8 flex flex-wrap gap-2.5">
             {stats.map((s) => (
-              <div key={s.small} className="rounded-xl bg-white/5 px-4 py-2.5">
-                <span className="text-lg font-bold text-brand-400">{s.big}</span>{" "}
-                <span className="text-xs text-slate-300">{s.small}</span>
+              <div
+                key={s.small}
+                className="rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 backdrop-blur-sm"
+              >
+                <span className="text-lg font-bold text-brand-300">{s.big}</span>{" "}
+                <span className="text-xs text-slate-200">{s.small}</span>
               </div>
             ))}
           </div>
@@ -65,12 +85,15 @@ export default function Home() {
           {/* 3ステップ */}
           <div className="mt-4 flex flex-wrap gap-2">
             {steps.map((s) => (
-              <div key={s.n} className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-2 text-sm">
+              <div
+                key={s.n}
+                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-2 text-sm backdrop-blur-sm"
+              >
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 text-xs font-bold text-white">
                   {s.n}
                 </span>
                 <span className="font-semibold text-white">{s.t}</span>
-                <span className="hidden text-xs text-slate-400 md:inline">{s.d}</span>
+                <span className="hidden text-xs text-slate-300 md:inline">{s.d}</span>
               </div>
             ))}
           </div>
