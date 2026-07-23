@@ -3,46 +3,8 @@
 import { useState } from "react";
 import type { Prompt } from "@/data/types";
 import { categoryLabel, personLabel, painLabel, promptRank } from "@/data/taxonomy";
-
-function copyText(text: string) {
-  if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
-  const ta = document.createElement("textarea");
-  ta.value = text;
-  ta.style.position = "fixed";
-  ta.style.opacity = "0";
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand("copy");
-  document.body.removeChild(ta);
-  return Promise.resolve();
-}
-
-function Highlighted({ body }: { body: string }) {
-  const parts = body.split(/(\{[^{}]+\})/g);
-  return (
-    <>
-      {parts.map((p, i) =>
-        /^\{[^{}]+\}$/.test(p) ? (
-          <span key={i} className="ph">
-            {p}
-          </span>
-        ) : (
-          <span key={i}>{p}</span>
-        ),
-      )}
-    </>
-  );
-}
-
-const toolBadge: Record<string, string> = {
-  chatgpt: "ChatGPT",
-  claude: "Claude",
-  both: "ChatGPT / Claude",
-};
-const toolUrl = {
-  chatgpt: "https://chatgpt.com/",
-  claude: "https://claude.ai/new",
-} as const;
+import { copyText, toolBadge } from "./prompt-utils";
+import PromptModal from "./PromptModal";
 
 export default function PromptCard({
   prompt,
@@ -54,25 +16,15 @@ export default function PromptCard({
   onToggleFav: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const cat = categoryLabel(prompt.category);
   const rank = promptRank(prompt.id);
 
-  const flash = (key: string) => {
-    setCopied(key);
-    window.setTimeout(() => setCopied((c) => (c === key ? null : c)), 1600);
-  };
   const doCopy = async () => {
     await copyText(prompt.body);
-    flash("copy");
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1600);
   };
-  const openWith = async (t: "chatgpt" | "claude") => {
-    await copyText(prompt.body);
-    flash(t);
-    window.open(toolUrl[t], "_blank", "noopener,noreferrer");
-  };
-  const tools: ("chatgpt" | "claude")[] =
-    prompt.tool === "both" ? ["chatgpt", "claude"] : [prompt.tool];
 
   return (
     <article className="flex flex-col rounded-xl border border-border bg-surface shadow-sm">
@@ -110,7 +62,7 @@ export default function PromptCard({
               onClick={doCopy}
               className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-brand-400 px-2.5 py-1 text-xs font-semibold text-brand-700 transition hover:bg-brand-50"
             >
-              {copied === "copy" ? "✓ コピー済" : "⧉ コピー"}
+              {copied ? "✓ コピー済" : "⧉ コピー"}
             </button>
           </div>
         </div>
@@ -151,39 +103,23 @@ export default function PromptCard({
           </p>
         )}
 
-        {/* 展開トグル */}
+        {/* 全文モーダルを開く */}
         <button
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen(true)}
           className="mt-3 text-sm font-bold text-brand-600 hover:text-brand-700"
         >
-          {open ? "▲ 閉じる" : "プロンプト全文を見る・使う ▸"}
+          プロンプト全文を見る・使う ▸
         </button>
-
-        {open && (
-          <div className="mt-2">
-            <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-background p-3 text-[13px] leading-relaxed text-foreground">
-              <Highlighted body={prompt.body} />
-            </pre>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                onClick={doCopy}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand-600"
-              >
-                {copied === "copy" ? "✓ コピーしました" : "全文コピー"}
-              </button>
-              {tools.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => openWith(t)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground transition hover:border-brand-400 hover:text-brand-700"
-                >
-                  {copied === t ? "✓ コピー→開きました" : `${toolBadge[t]}で開く`}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
+
+      {open && (
+        <PromptModal
+          prompt={prompt}
+          fav={fav}
+          onToggleFav={onToggleFav}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </article>
   );
 }
